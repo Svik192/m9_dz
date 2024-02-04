@@ -3,8 +3,7 @@ def input_error(func):
         try:
             return func(*args, **kwargs)
         except (TypeError, KeyError, ValueError, IndexError) as e:
-            print(f"Error: {e}")
-            return None
+            return f"Error: {e}"
 
     return wrapper
 
@@ -14,20 +13,29 @@ def hello(data):
 
 
 @input_error
-def add_contact(data, name, phone):
-    data[name] = phone
-    return f"Contact '{name}' with phone number '{phone}' added successfully."
+def add_contact(data, name: str, phone):
+    if name in data:
+        return "This name is already in the contact list!"
+    else:
+        data[name] = phone
+        return f"Contact '{name}' with phone number '{phone}' added successfully."
 
 
 @input_error
 def change_phone(data, name, phone):
-    data[name] = phone
-    return f"Phone number for '{name}' changed to '{phone}'."
+    if name not in data:
+        return "Name not found in contacts!"
+    else:
+        data[name] = phone
+        return f"Phone number for '{name}' changed to '{phone}'."
 
 
 @input_error
 def get_phone(data, name):
-    return f"The phone number for '{name}' is {data[name]}."
+    if name not in data:
+        return "Name not found in contacts!"
+    else:
+        return f"The phone number for '{name}' is {data[name]}."
 
 
 def show_all(data):
@@ -48,26 +56,43 @@ def default_handler(data):
     return "Unknown command. Please try again."
 
 
+def my_help(data):
+    return ("You can use these commands:\n"
+            "hello\n"
+            "add name phone\n"
+            "change name phone\n"
+            "phone name\n"
+            "show all\n"
+            "good bye\n"
+            "close\n"
+            "exit\n"
+            )
+
+
 commands = {
     "hello": hello,
-    "add": add_contact,
-    "change": change_phone,
-    "phone": get_phone,
+    "add ": add_contact,
+    "change ": change_phone,
+    "phone ": get_phone,
     "show all": show_all,
     "good bye": good_bye,
     "close": good_bye,
     "exit": good_bye,
+    "help": my_help,
 }
 
 
 @input_error
-def parse_command(user_input):
+def parse_command(user_input: str):
     command, args = None, []
+    user_input = user_input.lower()
 
     for cmd in commands:
         if user_input.startswith(cmd):
             command = cmd
             args = user_input.replace(cmd, "").split()
+            if len(args) >= 1:
+                args[0] = args[0].capitalize()  # name with a capital letter
 
     return command, args
 
@@ -88,7 +113,7 @@ def main():
         user_input = input("Enter command: ")
 
         command, args = parse_command(user_input)
-        print("command: ", command, type(command))
+        print("command: ", command)
         print("args: ", args)
 
         result = handle_command(command, *args)
